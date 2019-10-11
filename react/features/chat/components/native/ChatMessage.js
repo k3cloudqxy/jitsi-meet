@@ -10,6 +10,7 @@ import { Linkify } from '../../../base/react';
 import { replaceNonUnicodeEmojis } from '../../functions';
 
 import AbstractChatMessage, { type Props } from '../AbstractChatMessage';
+import PrivateMessageButton from '../PrivateMessageButton';
 
 import styles from './styles';
 
@@ -46,25 +47,30 @@ class ChatMessage extends AbstractChatMessage<Props> {
             textWrapperStyle.push(styles.systemTextWrapper);
         }
 
-        const messageText = message.messageType === 'error'
-            ? this.props.t('chat.error', {
-                error: message.error,
-                originalText: message.message
-            })
-            : message.message;
-
         return (
             <View style = { styles.messageWrapper } >
                 { this._renderAvatar() }
                 <View style = { detailsWrapperStyle }>
-                    <View style = { textWrapperStyle } >
-                        {
-                            this.props.showDisplayName
-                                && this._renderDisplayName()
-                        }
-                        <Linkify linkStyle = { styles.chatLink }>
-                            { replaceNonUnicodeEmojis(messageText) }
-                        </Linkify>
+                    <View style = { styles.replyWrapper }>
+                        <View style = { textWrapperStyle } >
+                            {
+                                this.props.showDisplayName
+                                    && this._renderDisplayName()
+                            }
+                            <Linkify linkStyle = { styles.chatLink }>
+                                { replaceNonUnicodeEmojis(this._getMessageText()) }
+                            </Linkify>
+                            {
+                                message.privateMessage
+                                    && this._renderPrivateNotice()
+                            }
+                        </View>
+                        { message.privateMessage && !localMessage
+                            && <PrivateMessageButton
+                                participantID = { message.id }
+                                reply = { true }
+                                showLabel = { false }
+                                toggledStyles = { styles.replyStyles } /> }
                     </View>
                     { this.props.showTimestamp && this._renderTimestamp() }
                 </View>
@@ -73,6 +79,10 @@ class ChatMessage extends AbstractChatMessage<Props> {
     }
 
     _getFormattedTimestamp: () => string;
+
+    _getMessageText: () => string;
+
+    _getPrivateNoticeMessage: () => string;
 
     /**
      * Renders the avatar of the sender.
@@ -102,6 +112,19 @@ class ChatMessage extends AbstractChatMessage<Props> {
         return (
             <Text style = { styles.displayName }>
                 { this.props.message.displayName }
+            </Text>
+        );
+    }
+
+    /**
+     * Renders the message privacy notice.
+     *
+     * @returns {React$Element<*>}
+     */
+    _renderPrivateNotice() {
+        return (
+            <Text style = { styles.privateNotice }>
+                { this._getPrivateNoticeMessage() }
             </Text>
         );
     }

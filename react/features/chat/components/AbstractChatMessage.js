@@ -56,4 +56,32 @@ export default class AbstractChatMessage<P: Props> extends PureComponent<P> {
         return getLocalizedDateFormatter(new Date(this.props.message.timestamp))
             .format(TIMESTAMP_FORMAT);
     }
+
+    /**
+     * Generates the message text to be redered in the component.
+     *
+     * @returns {string}
+     */
+    _getMessageText() {
+        const { message } = this.props;
+
+        return message.messageType === 'error'
+            ? this.props.t('chat.error', {
+                error: message.message
+            })
+            : message.message;
+    }
+
+    /**
+     * Returns the message that is displayed as a notice for private messages.
+     *
+     * @returns {string}
+     */
+    _getPrivateNoticeMessage() {
+        const { message, t } = this.props;
+
+        return t('chat.privateNotice', {
+            recipient: message.messageType === 'local' ? message.recipient : t('chat.you')
+        });
+    }
 }
